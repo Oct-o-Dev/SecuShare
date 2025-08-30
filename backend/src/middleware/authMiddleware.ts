@@ -5,6 +5,9 @@ import  User  from "../models/userModel";
 import { sendEmail } from "../utils/sendEmail";
 import { Request, Response, NextFunction } from "express";
 
+export interface AuthRequest extends Request {
+  user?: any;
+}
 
 interface JwtPayload {
   id: string;
@@ -61,28 +64,25 @@ router.post("/verify-otp", async (req, res) => {
   }
 });
 
-export const protect = (req: Request & { user?: any }, res: Response, next: NextFunction) => {
+export const protect = (req: AuthRequest, res: Response, next: NextFunction) => {
   let token;
 
   if (
     req.headers.authorization &&
     req.headers.authorization.startsWith("Bearer")
   ) {
-    try {
-      token = req.headers.authorization.split(" ")[1];
-
-      const decoded = jwt.verify(token, process.env.JWT_SECRET!) as JwtPayload;
-
-      // Attach user id to request
-      req.user = { id: decoded.id };
-
-      next();
-    } catch (error) {
-      return res.status(401).json({ message: "Not authorized, token failed" });
-    }
+    token = req.headers.authorization.split(" ")[1];
   }
 
   if (!token) {
     return res.status(401).json({ message: "Not authorized, no token" });
+  }
+
+  try {
+    const decoded = jwt.verify(token, process.env.JWT_SECRET as string);
+    req.user = decoded; // attach user info (id, email, etc.)
+    next();
+  } catch (error) {
+    return res.status(401).json({ message: "Not authorized, token failed" });
   }
 };

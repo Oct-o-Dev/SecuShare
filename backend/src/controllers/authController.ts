@@ -2,34 +2,37 @@ import { Request, Response } from "express";
 import bcrypt from "bcryptjs";
 import User, { IUser } from "../models/userModel";
 import { generateToken } from "../utils/generateToken";
+import { sendEmail } from "../utils/sendEmail";
 
 // Register
-export const registerUser = async (req: Request, res: Response) => {
-  const { email, password } = req.body;
-
+export const registerUser = async (req: any, res: any) => {
   try {
-    // check if user exists
-    const existing = await User.findOne({ email });
-    if (existing) return res.status(400).json({ message: "User already exists" });
+    const { email, password } = req.body;
 
-    // hash password
-    const hashedPassword = await bcrypt.hash(password, 10);
+    const existingUser = await User.findOne({ email });
+    if (existingUser) return res.status(400).json({ message: "User already exists" });
+
+    const otp = Math.floor(100000 + Math.random() * 900000).toString(); // 6 digit
+    const otpExpiry = new Date(Date.now() + 10 * 60 * 1000); // 10 min expiry
 
     const newUser = await User.create({
       email,
-      password: hashedPassword,
+      password,
+      otp,
+      otpExpiry,
+      verified: false,
     });
 
-    res.status(201).json({
-      id: newUser._id,
-      email: newUser.email,
-      token: generateToken((newUser._id as any).toString()),
-    });
+    // Send OTP via email
+    await sendEmail(email, "Verify your SecuShare account", `Your OTP is: ${otp}`);
+
+    res.status(201).json({ message: "User registered. Please verify OTP sent to email." });
   } catch (error) {
     res.status(500).json({ message: "Server error", error });
   }
 };
 
+// Login
 // Login
 export const loginUser = async (req: Request, res: Response) => {
   const { email, password } = req.body;
@@ -41,6 +44,11 @@ export const loginUser = async (req: Request, res: Response) => {
     const isMatch = await bcrypt.compare(password, user.password);
     if (!isMatch) return res.status(400).json({ message: "Invalid credentials" });
 
+    // ✅ check verification here
+    if (!user.verified) {
+      return res.status(400).json({ message: "Please verify your email before logging in." });
+    }
+
     res.json({
       id: user._id,
       email: user.email,
@@ -50,6 +58,7 @@ export const loginUser = async (req: Request, res: Response) => {
     res.status(500).json({ message: "Server error", error });
   }
 };
+
 
 // Profile
 export const getProfile = async (req: Request, res: Response) => {
@@ -61,6 +70,27 @@ export const getProfile = async (req: Request, res: Response) => {
     if (!user) return res.status(404).json({ message: "User not found" });
 
     res.json(user);
+  } catch (error) {
+    res.status(500).json({ message: "Server error", error });
+  }
+};
+export const verifyOtp = async (req: any, res: any) => {
+  try {
+    const { email, otp } = req.body;
+
+    const user = await User.findOne({ email });
+    if (!user) return res.status(400).json({ message: "User not found" });
+
+    if (user.otp !== otp || user.otpExpiry! < new Date()) {
+      return res.status(400).json({ message: "Invalid or expired OTP" });
+    }
+
+    user.verified = true;
+    user.otp = undefined;
+    user.otpExpiry = undefined;
+    await user.save();
+
+    res.json({ message: "Account verified successfully!" });
   } catch (error) {
     res.status(500).json({ message: "Server error", error });
   }
