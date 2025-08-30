@@ -3,8 +3,14 @@ import dotenv from "dotenv";
 import cors from "cors";
 import authRoutes from "./routes/authRoutes";
 import connectDB from "./config/db";
+import fileRoutes from './routes/fileRoutes';
 
 dotenv.config();
+
+console.log("--- Checking Environment Variables ---");
+console.log("Loaded Access Key ID:", process.env.AWS_ACCESS_KEY_ID);
+console.log("Loaded Secret Access Key:", process.env.AWS_SECRET_ACCESS_KEY); // <-- Add this
+console.log("------------------------------------");
 
 connectDB();
 
@@ -15,6 +21,7 @@ app.use(cors());
 app.use(express.json());
 
 app.use("/api/auth", authRoutes);
+app.use('/api/files', fileRoutes);
 
 app.get("/", (req, res) => {
   res.send("API is running...");

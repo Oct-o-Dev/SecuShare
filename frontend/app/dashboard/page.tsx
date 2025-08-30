@@ -1,24 +1,42 @@
 // app/dashboard/page.tsx
 "use client";
 
-import React, { useEffect } from 'react';
+import React, { useEffect, useState } from 'react';
 import { useAuth } from '@/context/AuthContext';
 import { useRouter } from 'next/navigation';
-import Button from '@/components/Button';
+import { FileUpload } from '@/components/FileUpload';
+import { FileList } from '@/components/FileList'; // Import the new component
+import api from '@/lib/api';
 
 export default function DashboardPage() {
-  const { user, token, loading, logout } = useAuth();
+  const { token, loading } = useAuth();
   const router = useRouter();
+  const [files, setFiles] = useState([]); // State to hold the list of files
+
+  // Function to fetch files
+  const fetchFiles = async () => {
+    try {
+      const { data } = await api.get('/files');
+      setFiles(data);
+    } catch (error) {
+      console.error("Failed to fetch files:", error);
+    }
+  };
 
   useEffect(() => {
-    // This effect runs when the component mounts and when `loading` or `token` changes.
-    // It protects the route from unauthenticated users.
     if (!loading && !token) {
       router.push('/login');
     }
+    if (token) {
+      fetchFiles(); // Fetch files when the component mounts and user is authenticated
+    }
   }, [token, loading, router]);
+  
+  // We can pass `fetchFiles` as a prop to FileUpload to refresh the list after an upload
+  const onUploadComplete = () => {
+    fetchFiles();
+  };
 
-  // While loading, we can show a spinner or a blank screen to prevent content flicker
   if (loading || !token) {
     return (
         <div className="flex justify-center items-center min-h-screen">
@@ -27,26 +45,22 @@ export default function DashboardPage() {
     );
   }
 
-  // Once loading is false and we have a token, we can render the dashboard
   return (
-    <div className="container mx-auto px-4 py-8">
-      <div className="bg-navy-blue p-8 rounded-xl shadow-lg">
-        <h1 className="text-4xl font-bold text-soft-beige mb-4">
-          Welcome to your Dashboard
+    <div className="container mx-auto px-4 py-8 space-y-12">
+      <div>
+        <h1 className="text-4xl font-bold text-soft-beige mb-2">
+          Dashboard
         </h1>
-        <p className="text-lg text-light-blue mb-6">
-          This is your secure area. Here you can upload and manage your encrypted files.
+        <p className="text-lg text-light-blue">
+          Securely upload and manage your files.
         </p>
+      </div>
 
-        {/* Placeholder for future functionality */}
-        <div className="border-2 border-dashed border-light-blue/50 rounded-lg p-12 text-center">
-            <h2 className="text-xl font-semibold text-soft-beige">File Uploader Coming Soon</h2>
-            <p className="text-light-blue mt-2">Get ready to share files securely!</p>
-        </div>
+      <FileUpload />
 
-        <div className="mt-8 max-w-xs">
-            <Button onClick={logout}>Logout</Button>
-        </div>
+      <div className="mt-12">
+        <h2 className="text-2xl font-bold text-soft-beige mb-4">My Files 📁</h2>
+        <FileList files={files} />
       </div>
     </div>
   );

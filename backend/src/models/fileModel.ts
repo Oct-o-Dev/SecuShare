@@ -5,7 +5,7 @@ import { IUser } from "./userModel"; // Import the IUser interface
 
 // Interface for the File document
 export interface IFile extends Document {
-  owner: IUser['_id']; // Link to the User model
+  owner: Schema.Types.ObjectId | IUser; // Link to the User model
   originalName: string;
   storageKey: string; // The unique key in S3 or other storage
   fileSize: number; // Size in bytes

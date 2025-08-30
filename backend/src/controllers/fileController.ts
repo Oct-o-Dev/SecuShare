@@ -4,16 +4,30 @@ import { Request, Response } from 'express';
 import { S3Client, PutObjectCommand } from '@aws-sdk/client-s3';
 import { getSignedUrl } from '@aws-sdk/s3-request-presigner';
 import { v4 as uuidv4 } from 'uuid';
-import File from '../models/fileModel';
+import File, { IFile } from '../models/fileModel';
+import { nanoid } from 'nanoid';
 
 // Initialize the S3 Client
+// Modify the S3 Client initialization
 const s3Client = new S3Client({
   region: process.env.AWS_REGION,
+  endpoint: process.env.S3_ENDPOINT, // Add this line
+  forcePathStyle: true, // Add this line
   credentials: {
     accessKeyId: process.env.AWS_ACCESS_KEY_ID!,
     secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY!,
   },
 });
+
+// const s3Client = new S3Client({
+//     region: 'us-east-1',
+//     endpoint: 'http://localhost:9000',
+//     forcePathStyle: true,
+//     credentials: {
+//         accessKeyId: 'minioadmin',
+//         secretAccessKey: 'minioadmin',
+//     },
+// });
 
 /**
  * @desc    Generate a presigned URL to upload a file to S3
@@ -22,7 +36,7 @@ const s3Client = new S3Client({
  */
 export const generatePresignedUrl = async (req: Request, res: Response) => {
   try {
-    const userId = (req as any).user._id; // From 'protect' middleware
+    const userId = (req as any).user.id; // Get 'id' from the JWT payload
     const { fileName, fileType, fileSize } = req.body;
 
     if (!fileName || !fileType || !fileSize) {
@@ -70,27 +84,75 @@ export const generatePresignedUrl = async (req: Request, res: Response) => {
  * @route   POST /api/files/complete-upload
  * @access  Private
  */
+// The corrected completeUpload function
+
+// src/controllers/fileController.ts
+
+// ... (keep the top of your file the same)
+
+// src/controllers/fileController.ts
+
+// ... (keep the generatePresignedUrl function as is)
+
+export const createShareLink = async (req: Request, res: Response) => {
+  try {
+    const userId = (req as any).user.id;
+    const { fileId } = req.params;
+
+    const file = await File.findById(fileId);
+
+    if (!file) {
+      return res.status(404).json({ message: 'File not found' });
+    }
+
+    // Security check: Ensure the user owns the file they are trying to share
+    if (file.owner.toString() !== userId) {
+      return res.status(403).json({ message: 'Not authorized to share this file' });
+    }
+
+    // Generate a new unique share ID if it doesn't exist
+    if (!file.shareSettings?.shareId) {
+      file.shareSettings = {
+        isShared: true,
+        shareId: nanoid(10), // Generates a 10-character ID
+      };
+      await file.save();
+    }
+
+    // Construct the full shareable link
+    const shareLink = `${req.protocol}://${req.get('host')}/download/${file.shareSettings.shareId}`;
+
+    res.status(200).json({ shareLink });
+
+  } catch (error) {
+    console.error('Error creating share link:', error);
+    res.status(500).json({ message: 'Server error' });
+  }
+};
+
+
 export const completeUpload = async (req: Request, res: Response) => {
     try {
-        const userId = (req as any).user._id;
+        const userId = (req as any).user.id;
         const { storageKey } = req.body;
 
         if (!storageKey) {
             return res.status(400).json({ message: 'Storage key is required' });
         }
 
-        const file = await File.findOne({ storageKey });
+        // Explicitly type the `file` variable. This will now work correctly
+        // because we updated the IFile interface in the model.
+        const file: IFile | null = await File.findOne({ storageKey });
 
         if (!file) {
             return res.status(404).json({ message: 'File not found' });
         }
 
-        // Security check: ensure the user completing the upload is the owner
-        if (String(file.owner) !== String(userId)) {
+        // Security check: TypeScript now understands `file.owner`
+        if (file.owner.toString() !== userId) {
             return res.status(403).json({ message: 'Not authorized' });
         }
         
-        // Update the file status to 'completed'
         file.uploadStatus = 'completed';
         await file.save();
 
@@ -101,3 +163,26 @@ export const completeUpload = async (req: Request, res: Response) => {
         res.status(500).json({ message: 'Server error' });
     }
 };
+
+// src/controllers/fileController.ts
+
+// ... (keep the other functions)
+
+/**
+ * @desc    Get all files for the logged-in user
+ * @route   GET /api/files
+ * @access  Private
+ */
+export const getUserFiles = async (req: Request, res: Response) => {
+  try {
+    const userId = (req as any).user.id;
+
+    const files = await File.find({ owner: userId }).sort({ createdAt: -1 });
+
+    res.status(200).json(files);
+  } catch (error) {
+    console.error('Error fetching user files:', error);
+    res.status(500).json({ message: 'Server error' });
+  }
+};
+
