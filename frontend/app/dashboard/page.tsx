@@ -32,11 +32,6 @@ export default function DashboardPage() {
     }
   }, [token, loading, router]);
   
-  // We can pass `fetchFiles` as a prop to FileUpload to refresh the list after an upload
-  const onUploadComplete = () => {
-    fetchFiles();
-  };
-
   if (loading || !token) {
     return (
         <div className="flex justify-center items-center min-h-screen">

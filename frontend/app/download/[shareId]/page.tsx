@@ -5,17 +5,16 @@ import { useEffect, useState, use } from 'react';
 import { Download, KeyRound } from 'lucide-react';
 import api from '@/lib/api';
 
-// Helper function
-const formatBytes = (bytes: number, decimals = 2) => {
-  if (bytes === 0) return '0 Bytes';
-  const k = 1024;
-  const dm = decimals < 0 ? 0 : decimals;
-  const sizes = ['Bytes', 'KB', 'MB', 'GB', 'TB'];
-  const i = Math.floor(Math.log(bytes) / Math.log(k));
-  return parseFloat((bytes / Math.pow(k, i)).toFixed(dm)) + ' ' + sizes[i];
-};
 
 interface FileDetails { originalName: string; fileSize: number; }
+
+interface ApiError {
+  response?: {
+    data?: {
+      message?: string;
+    };
+  };
+}
 
 export default function DownloadPage({ params }: { params: Promise<{ shareId: string }> }) {
   const { shareId } = use(params);
@@ -36,8 +35,9 @@ export default function DownloadPage({ params }: { params: Promise<{ shareId: st
         } else {
           setFile(data);
         }
-      } catch (err: any) {
-        setError(err.response?.data?.message || 'This link is invalid or has expired.');
+      } catch (err: unknown) {
+        const apiError = err as ApiError;
+        setError(apiError.response?.data?.message || 'This link is invalid or has expired.');
       } finally {
         setIsLoading(false);
       }
@@ -53,8 +53,9 @@ export default function DownloadPage({ params }: { params: Promise<{ shareId: st
       });
       // Trigger download by redirecting the page to the presigned URL
       window.location.href = data.downloadUrl;
-    } catch (err: any) {
-      setError(err.response?.data?.message || 'Download failed. Please try again.');
+    } catch (err: unknown) {
+      const apiError = err as ApiError;
+      setError(apiError.response?.data?.message || 'Download failed. Please try again.');
     }
   };
 

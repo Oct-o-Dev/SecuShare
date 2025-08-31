@@ -2,11 +2,7 @@
 
 import React from 'react';
 
-// This interface allows the input to accept all standard input props
-// like 'type', 'placeholder', 'value', 'onChange', etc.
-interface InputProps extends React.InputHTMLAttributes<HTMLInputElement> {}
-
-const Input = ({ className, ...props }: InputProps) => {
+const Input = ({ className, ...props }: React.InputHTMLAttributes<HTMLInputElement>) => {
   return (
     <input
       className={`w-full bg-navy-blue border border-light-blue text-soft-beige placeholder-soft-beige placeholder-opacity-50 px-4 py-3 rounded-lg focus:outline-none focus:ring-2 focus:ring-light-blue ${className}`}
