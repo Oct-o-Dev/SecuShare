@@ -18,6 +18,7 @@ export interface IFile extends Document {
     shareId?: string; // A short, unique ID for the public link
     expiresAt?: Date;
     downloadLimit?: number;
+    passwordHash?: string;
   };
   
   downloadCount: number;
@@ -57,6 +58,7 @@ const fileSchema = new Schema<IFile>(
       shareId: { type: String, unique: true, sparse: true }, // sparse allows multiple docs without this field
       expiresAt: { type: Date },
       downloadLimit: { type: Number },
+      passwordHash: { type: String },
     },
     downloadCount: {
       type: Number,

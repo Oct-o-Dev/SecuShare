@@ -11,7 +11,7 @@ import api from '@/lib/api';
 export default function DashboardPage() {
   const { token, loading } = useAuth();
   const router = useRouter();
-  const [files, setFiles] = useState([]); // State to hold the list of files
+  const [files, setFiles] = useState([]);
 
   // Function to fetch files
   const fetchFiles = async () => {
@@ -60,7 +60,8 @@ export default function DashboardPage() {
 
       <div className="mt-12">
         <h2 className="text-2xl font-bold text-soft-beige mb-4">My Files 📁</h2>
-        <FileList files={files} />
+        {/* Pass the fetchFiles function as the onFileDeleted prop */}
+        <FileList files={files} onFileDeleted={fetchFiles} />
       </div>
     </div>
   );
