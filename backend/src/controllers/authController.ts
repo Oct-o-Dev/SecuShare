@@ -4,6 +4,7 @@ import User, { IUser } from "../models/userModel";
 import { generateToken } from "../utils/generateToken";
 import { sendEmail } from "../utils/sendEmail";
 
+
 // Register
 export const registerUser = async (req: any, res: any) => {
   try {

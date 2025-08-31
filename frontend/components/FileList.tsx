@@ -18,7 +18,7 @@ const formatBytes = (bytes: number, decimals = 2) => {
   return parseFloat((bytes / Math.pow(k, i)).toFixed(dm)) + ' ' + sizes[i];
 };
 
-export const FileList = ({ files, onFileDeleted }: { files: any[], onFileDeleted: () => void }) => {
+export const FileList = ({ files, onFileDeleted }: { files: FileType[], onFileDeleted: () => void }) => {
   const [isShareModalOpen, setIsShareModalOpen] = useState(false);
   const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
   const [selectedFile, setSelectedFile] = useState<FileType | null>(null);
