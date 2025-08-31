@@ -2,7 +2,7 @@
 "use client";
 
 import { useEffect, useState, use } from 'react';
-import { Download, File as FileIcon, AlertTriangle, KeyRound } from 'lucide-react';
+import { Download, KeyRound } from 'lucide-react';
 import api from '@/lib/api';
 
 // Helper function

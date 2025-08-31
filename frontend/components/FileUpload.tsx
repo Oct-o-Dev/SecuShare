@@ -2,12 +2,11 @@
 "use client";
 
 import { useState } from 'react';
-import { useAuth } from '@/context/AuthContext';
 import api from '@/lib/api';
 import axios from 'axios';
-import { UploadCloud, File as FileIcon, CheckCircle, AlertCircle } from 'lucide-react';
+import { UploadCloud, CheckCircle, AlertCircle } from 'lucide-react';
 
-export const FileUpload = () => {
+export const FileUpload = ({ onUploadComplete }: { onUploadComplete: () => void }) => {
   const [file, setFile] = useState<File | null>(null);
   const [uploadProgress, setUploadProgress] = useState(0);
   const [uploadStatus, setUploadStatus] = useState<'idle' | 'uploading' | 'success' | 'error'>('idle');
@@ -56,6 +55,7 @@ export const FileUpload = () => {
       setUploadStatus('success');
       setMessage('File uploaded successfully!');
       setFile(null);
+      onUploadComplete();
 
     } catch (err) {
       console.error(err);

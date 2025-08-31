@@ -3,9 +3,10 @@
 
 import { useState, useEffect } from 'react';
 import { X, Copy, Check } from 'lucide-react';
+import { FileType } from '@/types';
 import api from '@/lib/api';
 
-export const ShareModal = ({ file, onClose }: { file: any; onClose: () => void; }) => {
+export const ShareModal = ({ file, onClose }: { file: FileType; onClose: () => void; }) => {
   const [shareLink, setShareLink] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const [isCopied, setIsCopied] = useState(false);

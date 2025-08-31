@@ -5,6 +5,7 @@ import { useState } from 'react';
 import { File as FileIcon, Share2, Trash2 } from 'lucide-react';
 import { ShareModal } from './ShareModal';
 import { ConfirmationModal } from './ConfirmationModal'; // Import the new modal
+import { FileType } from '@/types';
 import api from '@/lib/api';
 
 // A helper function to format file sizes
@@ -20,14 +21,14 @@ const formatBytes = (bytes: number, decimals = 2) => {
 export const FileList = ({ files, onFileDeleted }: { files: any[], onFileDeleted: () => void }) => {
   const [isShareModalOpen, setIsShareModalOpen] = useState(false);
   const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
-  const [selectedFile, setSelectedFile] = useState<any | null>(null);
+  const [selectedFile, setSelectedFile] = useState<FileType | null>(null);
 
-  const handleShareClick = (file: any) => {
+  const handleShareClick = (file: FileType) => {
     setSelectedFile(file);
     setIsShareModalOpen(true);
   };
   
-  const handleDeleteClick = (file: any) => {
+  const handleDeleteClick = (file: FileType) => {
     setSelectedFile(file);
     setIsDeleteModalOpen(true);
   };

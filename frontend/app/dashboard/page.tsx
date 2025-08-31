@@ -48,6 +48,7 @@ export default function DashboardPage() {
   return (
     <div className="container mx-auto px-4 py-8 space-y-12">
       <div>
+        
         <h1 className="text-4xl font-bold text-soft-beige mb-2">
           Dashboard
         </h1>
@@ -56,7 +57,7 @@ export default function DashboardPage() {
         </p>
       </div>
 
-      <FileUpload />
+      <FileUpload onUploadComplete={fetchFiles} />
 
       <div className="mt-12">
         <h2 className="text-2xl font-bold text-soft-beige mb-4">My Files 📁</h2>
